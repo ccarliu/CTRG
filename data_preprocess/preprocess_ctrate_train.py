@@ -88,8 +88,7 @@ def process_file(file_path):
     except:
         print(file_name)
         return
-    
-    save_folder = "/jizhicfs/datalh/dataset/CTRATE/data_volumes/dataset/train_preprocessed" #save folder for preprocessed
+
     folder_path_new = os.path.join(save_folder, "train_" + file_name.split("_")[1], "train_" + file_name.split("_")[1] + file_name.split("_")[2]) #folder name for train or validation
     os.makedirs(folder_path_new, exist_ok=True)
     file_name = file_name.split(".")[0]+".npz"
@@ -132,11 +131,12 @@ def process_file(file_path):
 
 # Example usage:
 if __name__ == "__main__":
-    split_to_preprocess = '/jizhicfs/datalh/dataset/CTRATE/data_volumes/dataset' #select the validation or test split
+    split_to_preprocess = 'xxx/dataset' #select the validation or test split
+    save_folder = "xxx/train_preprocessed" #save folder for preprocessed
     nii_files = read_nii_files(split_to_preprocess)
 
-    df = pd.read_csv("/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/train_metadata.csv") #select the metadata
-
+    df = pd.read_csv("xxx/CTRATE/train_metadata.csv") #select the metadata
+    
     num_workers = 10  # Number of worker processes
 
     # Process files using multiprocessing with tqdm progress bar
