@@ -93,7 +93,6 @@ def process_file(file_path):
         print(file_name)
         return
 
-    save_folder = "/jizhicfs/datalh/dataset/CTRATE/data_volumes/dataset/valid_preprocessed_15_3" #save folder for preprocessed
     
     folder_path_new = os.path.join(save_folder, "train_" + file_name.split("_")[1], "train_" + file_name.split("_")[1] + file_name.split("_")[2]) #folder name for train or validation
     
@@ -112,10 +111,6 @@ def process_file(file_path):
     target_x_spacing = 0.75
     target_y_spacing = 0.75
     target_z_spacing = 1.5
-
-    target_x_spacing = 1.5
-    target_y_spacing = 1.5
-    target_z_spacing = 3
 
     current = (z_spacing, xy_spacing, xy_spacing)
     target = (target_z_spacing, target_x_spacing, target_y_spacing)
@@ -141,14 +136,14 @@ def process_file(file_path):
 
 # Example usage:
 if __name__ == "__main__":
-    split_to_preprocess = '/jizhicfs/datalh/dataset/CTRATE/data_volumes/dataset/valid' #select the validation or test split
+    split_to_preprocess = 'xxx/CTRATE/data_volumes/dataset/valid' #select the validation or test split
     nii_files = read_nii_files(split_to_preprocess)
 
     print(len(nii_files))
 
-    df = pd.read_csv("/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/dataset_metadata_validation_metadata.csv") #select the metadata
-
-    num_workers = 9  # Number of worker processes
+    df = pd.read_csv("xxx/CTRATE/dataset_metadata_validation_metadata.csv") #select the metadata
+    save_folder = "xxx/CTRATE/data_volumes/dataset/valid_preprocessed" #save folder for preprocessed
+    num_workers = 10  # Number of worker processes
 
     # Process files using multiprocessing with tqdm progress bar
     with Pool(num_workers) as pool:
