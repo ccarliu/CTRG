@@ -5,9 +5,7 @@ import resource
 import pytorch_lightning as pl
 
 from CTRG.config import ex
-from CTRG.datamodules.multitask_datamodule import MTDataModule
 from CTRG.datamodules.pretraining_medicat_datamodule import MedicatDataModule_3D_RATE_hr, MedicatDataModule_3D_RATE_hr_fea
-from CTRG.datasets.pretraining_ctrg_dataset import CTRGDataset
 from CTRG.modules import M3AETransformerSS_3D_lmae_rg_v30, M3AETransformerSS_3D_lmae_rg_v32, M3AETransformerSS_3D_lmae_rg_v31
 import torch
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
@@ -50,7 +48,7 @@ def main(_config):
     
     
     if not _config["test_only"]:
-        ck = torch.load(ckpath, map_location="cpu")["state_dict"]
+        ck = torch.load(_config["pretrain_path"], map_location="cpu")["state_dict"]
         keys=[]
         for k,v in ck.items():
             if "text_decoder" in k:    #将‘arc’开头的key过滤掉，这里是要去除的层的key
@@ -60,8 +58,7 @@ def main(_config):
         model.ckpath = "./training_generated_report.txt"
         new_dict = {k:ck[k] for k in keys}
     else:
-        
-        ckpath = "xxx"
+        ckpath = _config["pretrain_path"]
         
         ck = torch.load(ckpath, map_location="cpu")["state_dict"]
         model.load_state_dict(ck)
