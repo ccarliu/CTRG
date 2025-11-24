@@ -136,8 +136,8 @@ class M3AETransformerSS_3D_lmae_rg_v32(pl.LightningModule):
 
         
 
-        path = "/apdcephfs_cq10/share_1290796/lh/dataset/Llama-2-7b-chat-hf"
-        path = "/apdcephfs_cq10/share_1290796/lh/dataset/Meta-Llama-3-8B-Instruct"
+        path = config["decoder_path"]
+        # path = "/apdcephfs_cq10/share_1290796/lh/dataset/Meta-Llama-3-8B-Instruct"
         # path = "/apdcephfs_cq10/share_1290796/lh/dataset/llava_med"
         #path = "/jizhicfs/datalh/dataset/qwen/qwen7b"
  
@@ -187,10 +187,6 @@ class M3AETransformerSS_3D_lmae_rg_v32(pl.LightningModule):
         self.modality_type_embeddings = nn.Embedding(2, config["hidden_size"])
         self.modality_type_embeddings.apply(init_weights)
 
-        self.multi_modal_vision_pooler = prediction_heads.Pooler(config["hidden_size"])
-        self.multi_modal_vision_pooler.apply(init_weights)
-        self.multi_modal_language_pooler = prediction_heads.Pooler(config["hidden_size"])
-        self.multi_modal_language_pooler.apply(init_weights)
 
         self.multi_modal_vision_proj_forllm = SimpleMLP(config['hidden_size'], 4096) # 2560 for 4b, 2048 for 1.8b, 1024for.5b, 1536 for 2 1.5b 896
         self.multi_modal_vision_proj_forllm.apply(init_weights)
@@ -367,32 +363,11 @@ class M3AETransformerSS_3D_lmae_rg_v32(pl.LightningModule):
         device = text_ids.device
         # == End  : Fetch the inputs ==
 
-        # == Begin  : Text Encoding ==
-
-        # uni_modal_text_feats = self.text_model(text_ids)['last_hidden_state'] # _, n, c
-        # extended_text_masks = self.text_model.get_extended_attention_mask(text_masks, text_masks.size(), device)
-        
-        # == End  : Text Encoding ==
-
-        # == Begin: extract seg text feature
-        
-        # == End: extract seg text feature
-
-        # == Begin: Image Encoding ==
-        #with torch.no_grad():
         selected_patch = img.squeeze(1)
-        # print(selected_patch.shape)
         b, n, l = selected_patch.shape
-        # selected_patch = selected_patch[:, -10:]
-        # selected_patch = selected_patch.reshape(b, 11, n // 11, l)[:, :10, :6, :].reshape(b, 60, l)
         selected_patch = self.multi_modal_vision_proj_forllm(selected_patch)
 
 
-        #print(selected_patch.shape)
-
-        #ret["norm_class_res"] = norm_class_res[0, :8].reshape(1,8)
-        #ret["norm_class_label"] = obver_label[0].unsqueeze(0).float()
-        #ret["attention_map"] = attention_map
 
         image_masks = torch.ones((selected_patch.size(0), selected_patch.size(1)), dtype=torch.long,
                                  device=device)
@@ -408,8 +383,6 @@ class M3AETransformerSS_3D_lmae_rg_v32(pl.LightningModule):
             max_length=380,
             add_special_tokens=False
         ).to(device)
-        # print(batch["rg_encoding"])
-        # print(text_labels.input_ids.shape)
         targets = to_regress_tokens.input_ids.masked_fill(
             to_regress_tokens.input_ids == 0, -100
         )
@@ -425,25 +398,15 @@ class M3AETransformerSS_3D_lmae_rg_v32(pl.LightningModule):
 
         to_regress_embeds = self.embed_tokens(to_regress_tokens.input_ids)
 
-        #print(to_regress_embeds.device, "xxxxxxxxxxxxxxxxxxxxx")
 
         inputs_embeds = torch.cat([img_embeds, to_regress_embeds], dim=1)
         attention_mask = torch.cat([atts_img, to_regress_tokens.attention_mask], dim=1)
-        # print(self.embed_tokens)
-        # self.text_decoder = self.text_decoder.to(device)
-        # print(device)
-        # print(image_masks.shape, attention_map.shape) # 1,45   //  1,96,9
-        # selected_patch[:, 5:-1, :] = selected_patch[:, -1:, :]
-        # print(torch.isnan(inputs_embeds).any())
+
         decoder_output = self.text_decoder(inputs_embeds=inputs_embeds.to(device),
                                            attention_mask=attention_mask.to(device),
                                            return_dict=True,
                                            labels=targets.to(device),
                                           )
-        #print(decoder_output.shape)
-        # sprint(decoder_output.logits.shape) 1 524 32000
-        #print(decoder_output[:, :10, :])
-        #exit(0)
 
         # == Begin: == Output Multi-Modal Features ==
         if not self.training:
@@ -457,39 +420,6 @@ class M3AETransformerSS_3D_lmae_rg_v32(pl.LightningModule):
                 output_attentions=True,
             )
 
-            print(outputs.keys())
-
-            results = analyze_image_attention(outputs.attentions, 5, 115)
-
-            # 打印结果
-            for token_index, attention_weight in results.items():
-                print(f"Token {token_index}: Attention weight to image tokens = {attention_weight:.4f}")
-
-            # 提取 token_index 和 attention_weight
-            token_indices = list(results.keys())
-            attention_weights = list(results.values())
-
-            # 创建柱状图
-            plt.figure(figsize=(10, 6))
-            plt.bar(token_indices, attention_weights, color='skyblue')
-
-            # 添加标题和标签
-            plt.title('Attention Weights for Tokens')
-            plt.xlabel('Token Index')
-            plt.ylabel('Attention Weight')
-
-            # 添加每个柱子的数值标签
-            # for i, weight in enumerate(attention_weights):
-            #     plt.text(i, weight + 0.01, f'{weight:.4f}', ha='center', va='bottom')
-
-            # 保存图像
-            plt.savefig('attention_weights_bar_chart.png')
-
-                # exit(0)
-            #hypo = [self.decode(i) for i in outputs]
-            #ref = [self.decode(i) for i in to_regress_tokens['input_ids']]
-            #self.test_step_outputs.append({"hypo": hypo, "ref": ref, "id": samples["id"]})
-
             captions = []
             for output in outputs.sequences:
                 caption = self.tokenizer.decode(output, skip_special_tokens=True)
@@ -498,21 +428,12 @@ class M3AETransformerSS_3D_lmae_rg_v32(pl.LightningModule):
             captions = ["I am fxxking man."] # for test 
 
 
-        # print(text_ori)
-        #print("xxxxxxxxxxxxxx")
-        #print(captions)
 
         ret.update({
             "images": img,
-            # "patched_images": self.patchify(img), # patch3D
-            #"text_labels": text_labels,
             "text_ids": text_ids,
             "text_masks": text_masks,
-            #"extended_image_masks": extended_image_masks,
-            #"extended_text_masks": extended_text_masks,
             "multi_modal_text_feats": decoder_output,
-            #"multi_modal_image_feats": multi_modal_image_feats,
-            #"multi_modal_cls_feats": multi_modal_cls_feats,
             "decoder_output": decoder_output,
             "text_ori": text_input,
             "captions": captions,

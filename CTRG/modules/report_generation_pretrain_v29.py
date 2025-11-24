@@ -22,15 +22,6 @@ from transformers.models.bert.modeling_bert import BertEmbeddings, BertEncoder, 
 # from transformer_maskgit import CTViT
 from ctvit import CTViT
 
-# v14 with multi image per batch
-# v15 with only itc
-# v17 with change the text encoder
-# v18, simple code
-# v19: new patch selector back
-# v21: v20 with a nagetive sample selective module to improve the quanity of nagetive pool.
-
-# v24: with big resolution
-
 # further version of v 24
 
 def attention_with_norm(tensor1, tensor2):
@@ -82,14 +73,14 @@ class M3AETransformerSS_3D_lmae_rg_pretrain_v29(pl.LightningModule):
         print(self.imt_mask.shape)
 
 
-        loaded_data = np.load('/apdcephfs_cq10/share_1290796/lh/M3AE-master/M3AE-master/text_latent_feature.npz')
+        loaded_data = np.load('./text_latent_feature.npz')
 
         # to evaluate the performance of pretrain, we use retrieval metric
         loaded_names = loaded_data['names']
         self.test_text_features = torch.tensor(loaded_data['features'][300:800]) # F.normalize(torch.tensor(loaded_data['features'][300:800]), dim = -1)                
        
         # == Begin: 1. Build Models ==
-        textmodelpath = "/apdcephfs_cq10/share_1290796/lh/dataset/CTRG/model"
+        textmodelpath = config["text_model"] #/apdcephfs_cq10/share_1290796/lh/dataset/CTRG/model"
         bert_config = AutoConfig.from_pretrained(textmodelpath)
         # == vision encoder ==
 
@@ -108,14 +99,14 @@ class M3AETransformerSS_3D_lmae_rg_pretrain_v29(pl.LightningModule):
 
         
         # load pretrained parameter in CT-CLIP
-        ck = torch.load("/apdcephfs_cq10/share_1290796/lh/dataset/BiomedVLP_cxr_bert/CT_CLIP_zeroshot.pt", map_location = "cpu")
+        ck = torch.load(config["ct_clip_ckpoint"], map_location = "cpu")
         nck = {}
         nck = {k.replace("visual_transformer.", ""):v for k,v in ck.items() if "visual_transformer." in k}
 
         self.vision_encoder.load_state_dict(nck, strict = False)
 
 
-        textmodelpath = "/apdcephfs_cq10/share_1290796/lh/dataset/BiomedVLP_cxr_bert"
+        textmodelpath = config["text_tokenlizer_path"]
         self.tokenizer = BertTokenizer.from_pretrained(textmodelpath, do_lower_case=True)
 
         self.text_model = BertModel.from_pretrained(textmodelpath)
@@ -234,7 +225,8 @@ class M3AETransformerSS_3D_lmae_rg_pretrain_v29(pl.LightningModule):
             image_token_type_idx=1,
             img=None,
             output_attentions=False,
-            unimodal=False
+            unimodal=False,
+            early_quit = False
     ):
         ret = dict()
 
@@ -272,7 +264,8 @@ class M3AETransformerSS_3D_lmae_rg_pretrain_v29(pl.LightningModule):
         ret['y_all_attn'] = y_all_attn 
 
         
-            
+        if early_quit:
+            return ret
 
         with torch.no_grad():
             local_text_m = local_text.detach()

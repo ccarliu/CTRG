@@ -100,6 +100,30 @@ def config():
 
     use_feature = True
 
+    # pretrain
+    text_model = "/apdcephfs_cq10/share_1290796/lh/dataset/CTRG/model"
+    ct_clip_ckpoint = "/apdcephfs_cq10/share_1290796/lh/dataset/BiomedVLP_cxr_bert/CT_CLIP_zeroshot.pt"
+
+    text_path_train = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/train_reports.csv"
+    image_path_train = "/jizhicfs/datalh/dataset/CTRATE/data_volumes/dataset/train_preprocessed"
+    label_path_train = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/dataset_multi_abnormality_labels_train_predicted_labels.csv"
+    
+
+    text_path_test = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/dataset_radiology_text_reports_validation_reports.csv"
+    image_path_test = "/jizhicfs/datalh/dataset/CTRATE/data_volumes/dataset/valid_preprocessed"
+    label_path_test = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/dataset_multi_abnormality_labels_valid_predicted_labels.csv"
+    
+
+    # finetune
+
+    text_tokenlizer_path = "/apdcephfs_cq10/share_1290796/lh/dataset/Llama-2-7b-chat-hf"
+    decoder_path = "/apdcephfs_cq10/share_1290796/lh/dataset/Llama-2-7b-chat-hf"
+
+    pretrain_path = "xxx"
+
+    imgfea_path_train = "/jizhicfs/datalh/M3AE/img_feature/version_1859_e8"
+    imgfea_path_test = "/jizhicfs/datalh/M3AE/img_feature/version_1859_e8"
+
 
 @ex.named_config
 def task_pretrain_m3ae():
@@ -157,6 +181,19 @@ def task_pretrain_m3ae_3D():
     precision = 16
     mim_layer = 3
 
+    text_path_train = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/train_reports.csv"
+    image_path_train = "/jizhicfs/datalh/dataset/CTRATE/data_volumes/dataset/train_preprocessed"
+    label_path_train = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/dataset_multi_abnormality_labels_train_predicted_labels.csv"
+
+    text_path_test = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/dataset_radiology_text_reports_validation_reports.csv"
+    image_path_test = "/jizhicfs/datalh/dataset/CTRATE/data_volumes/dataset/valid_preprocessed"
+    label_path_test = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/dataset_multi_abnormality_labels_valid_predicted_labels.csv"
+
+    text_tokenlizer_path = "/apdcephfs_cq10/share_1290796/lh/dataset/BiomedVLP_cxr_bert"
+
+    text_model = "/apdcephfs_cq10/share_1290796/lh/dataset/CTRG/model"
+    ct_clip_ckpoint = "/apdcephfs_cq10/share_1290796/lh/dataset/BiomedVLP_cxr_bert/CT_CLIP_zeroshot.pt"
+
 @ex.named_config
 def task_finetune_rg():
     exp_name = "task_pretrain_m3ae"
@@ -187,315 +224,18 @@ def task_finetune_rg():
 
     use_feature = True
 
-@ex.named_config
-def task_finetune_rg_dpo():
-    exp_name = "task_pretrain_m3ae"
-    datasets = ["medicat", "roco"]
-    loss_names = _loss_names({"itm": 0, "mlm": 0, "mim": 0, "rg": 1})
-    batch_size = 256
-    max_epoch = 10
-    max_steps = 50000
-    warmup_steps = 0.025
-    whole_word_masking = True
+    text_path_train = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/train_reports.csv"
+    image_path_train = "/jizhicfs/datalh/dataset/CTRATE/data_volumes/dataset/train_preprocessed"
+    label_path_train = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/dataset_multi_abnormality_labels_train_predicted_labels.csv"
+    imgfea_path_train = "/jizhicfs/datalh/M3AE/img_feature/version_1859_e8"
 
-    vocab_size = 30522
-    max_text_len = 64
-    image_size = 224
-    tokenizer = "bert-base-uncased"
-    train_transform_keys = ["clip"]
-    val_transform_keys = ["clip"]
-    learning_rate = 2e-7
-    val_check_interval = 1.0
-    lr_multiplier_head = 5
-    lr_multiplier_multi_modal = 5
-    num_top_layer = 6
-    hidden_size = 768
-    num_heads = 12
+    text_path_test = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/dataset_radiology_text_reports_validation_reports.csv"
+    image_path_test = "/jizhicfs/datalh/dataset/CTRATE/data_volumes/dataset/valid_preprocessed"
+    label_path_test = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/CTRATE/dataset_multi_abnormality_labels_valid_predicted_labels.csv"
+    imgfea_path_train = "/jizhicfs/datalh/M3AE/img_feature/version_1859_e8"
 
-    precision = 16
-    mim_layer = 3
+    text_tokenlizer_path = "/apdcephfs_cq10/share_1290796/lh/dataset/Llama-2-7b-chat-hf"
     
+    decoder_path = "/apdcephfs_cq10/share_1290796/lh/dataset/Llama-2-7b-chat-hf"
 
-@ex.named_config
-def task_finetune_vqa_vqa_rad():
-    exp_name = "task_finetune_vqa_vqa_rad"
-    datasets = ["vqa_vqa_rad"]
-    loss_names = _loss_names({"vqa": 1})
-    batch_size = 64
-    max_epoch = 50
-    max_steps = None
-    warmup_steps = 0.1
-    draw_false_image = 0
-    learning_rate = 5e-6
-    val_check_interval = 1.0
-    lr_multiplier_head = 50
-    lr_multiplier_multi_modal = 5
-    tokenizer = "bert-base-uncased"
-    max_text_len = 32
-    input_text_embed_size = 768
-    vit = 'ViT-B/32'
-    train_transform_keys = ["clip"]
-    val_transform_keys = ["clip"]
-    input_image_embed_size = 768
-    image_size = 576
-
-    vqa_label_size = 498
-
-
-@ex.named_config
-def task_finetune_vqa_slack():
-    exp_name = "task_finetune_vqa_slack"
-    datasets = ["vqa_slack"]
-    loss_names = _loss_names({"vqa": 1})
-    batch_size = 32
-    max_epoch = 15
-    max_steps = None
-    warmup_steps = 0.1
-    draw_false_image = 0
-    learning_rate = 5e-6
-    val_check_interval = 1.0
-    lr_multiplier_head = 50
-    lr_multiplier_multi_modal = 5
-    tokenizer = "bert-base-uncased"
-    max_text_len = 32
-    input_text_embed_size = 768
-    vit = 'ViT-B/32'
-    train_transform_keys = ["clip"]
-    val_transform_keys = ["clip"]
-    input_image_embed_size = 768
-    image_size = 576
-
-    vqa_label_size = 222
-
-
-@ex.named_config
-def task_finetune_vqa_medvqa_2019():
-    exp_name = "task_finetune_vqa_medvqa_2019"
-    datasets = ["vqa_medvqa_2019"]
-    loss_names = _loss_names({"vqa": 1})
-    batch_size = 32
-    max_epoch = 10
-    max_steps = None
-    warmup_steps = 0.1
-    draw_false_image = 0
-    learning_rate = 5e-6
-    val_check_interval = 1.0
-    lr_multiplier_head = 50
-    lr_multiplier_multi_modal = 5
-    tokenizer = "bert-base-uncased"
-    max_text_len = 32
-    input_text_embed_size = 768
-    vit = 'ViT-B/32'
-    train_transform_keys = ["clip"]
-    val_transform_keys = ["clip"]
-    input_image_embed_size = 768
-    image_size = 576
-
-    vqa_label_size = 79
-
-
-@ex.named_config
-def task_finetune_cls_melinda_i_meth():
-    exp_name = "task_finetune_cls_melinda_i_meth"
-    datasets = ["cls_melinda"]
-    loss_names = _loss_names({"cls": 1})
-    batch_size = 16
-    max_epoch = 20
-    max_steps = None
-    warmup_steps = 0.1
-    draw_false_image = 0
-    learning_rate = 5e-6
-    lr_multiplier_head = 10
-    lr_multiplier_multi_modal = 5
-    tokenizer = "bert-base-uncased"
-    max_text_len = 128
-    input_text_embed_size = 768
-    vit = 'ViT-B/32'
-    train_transform_keys = ["clip"]
-    val_transform_keys = ["clip"]
-    input_image_embed_size = 768
-    image_size = 384
-
-    label_column_name = "i_meth"
-
-
-@ex.named_config
-def task_finetune_cls_melinda_i_meth_label():
-    exp_name = "task_finetune_cls_melinda_i_meth_label"
-    datasets = ["cls_melinda"]
-    loss_names = _loss_names({"cls": 1})
-    batch_size = 16
-    max_epoch = 20
-    max_steps = None
-    warmup_steps = 0.1
-    draw_false_image = 0
-    learning_rate = 5e-6
-    lr_multiplier_head = 10
-    lr_multiplier_multi_modal = 5
-    tokenizer = "bert-base-uncased"
-    max_text_len = 128
-    input_text_embed_size = 768
-    vit = 'ViT-B/32'
-    train_transform_keys = ["clip"]
-    val_transform_keys = ["clip"]
-    input_image_embed_size = 768
-    image_size = 384
-
-    label_column_name = "i_meth_label"
-
-
-@ex.named_config
-def task_finetune_cls_melinda_p_meth():
-    exp_name = "task_finetune_cls_melinda_p_meth"
-    datasets = ["cls_melinda"]
-    loss_names = _loss_names({"cls": 1})
-    batch_size = 16
-    max_epoch = 20
-    max_steps = None
-    warmup_steps = 0.1
-    draw_false_image = 0
-    learning_rate = 5e-6
-    lr_multiplier_head = 10
-    lr_multiplier_multi_modal = 5
-    tokenizer = "bert-base-uncased"
-    max_text_len = 128
-    input_text_embed_size = 768
-    vit = 'ViT-B/32'
-    train_transform_keys = ["clip"]
-    val_transform_keys = ["clip"]
-    input_image_embed_size = 768
-    image_size = 384
-
-    label_column_name = "p_meth"
-
-
-@ex.named_config
-def task_finetune_cls_melinda_p_meth_label():
-    exp_name = "task_finetune_cls_melinda_p_meth_label"
-    datasets = ["cls_melinda"]
-    loss_names = _loss_names({"cls": 1})
-    batch_size = 16
-    max_epoch = 20
-    max_steps = None
-    warmup_steps = 0.1
-    draw_false_image = 0
-    learning_rate = 5e-6
-    lr_multiplier_head = 10
-    lr_multiplier_multi_modal = 5
-    tokenizer = "bert-base-uncased"
-    max_text_len = 128
-    input_text_embed_size = 768
-    vit = 'ViT-B/32'
-    train_transform_keys = ["clip"]
-    val_transform_keys = ["clip"]
-    input_image_embed_size = 768
-    image_size = 384
-
-    label_column_name = "p_meth_label"
-
-
-@ex.named_config
-def task_finetune_irtr_roco():
-    exp_name = "task_finetune_irtr_roco"
-    datasets = ["irtr_roco"]
-    loss_names = _loss_names({"irtr": 1})
-    batch_size = 256
-    max_epoch = 10
-    max_steps = None
-    warmup_steps = 0.1
-    get_recall_metric = True
-    draw_false_text = 15
-    learning_rate = 5e-6
-    lr_multiplier_head = 5
-    lr_multiplier_multi_modal = 5
-    tokenizer = "bert-base-uncased"
-    input_text_embed_size = 768
-    vit = 'ViT-B/32'
-    train_transform_keys = ["clip"]
-    val_transform_keys = ["clip"]
-    input_image_embed_size = 768
-    image_size = 384
-
-
-# Named configs for "etc" which are orthogonal to "env" and "task", need to be added at the end
-
-# vision encoder
-@ex.named_config
-def swin32_base224():
-    vit = "swin_base_patch4_window7_224_in22k"
-    patch_size = 32
-    image_size = 224
-    train_transform_keys = ["imagenet"]
-    val_transform_keys = ["imagenet"]
-    input_image_embed_size = 1024
-
-
-@ex.named_config
-def swin32_base384():
-    vit = "swin_base_patch4_window12_384_in22k"
-    patch_size = 32
-    image_size = 384
-    train_transform_keys = ["imagenet"]
-    val_transform_keys = ["imagenet"]
-    input_image_embed_size = 1024
-
-
-@ex.named_config
-def swin32_large384():
-    vit = "swin_large_patch4_window12_384_in22k"
-    patch_size = 32
-    image_size = 384
-    train_transform_keys = ["imagenet"]
-    val_transform_keys = ["imagenet"]
-    input_image_embed_size = 1536
-
-
-@ex.named_config
-def clip32():
-    vit = 'ViT-B/32'
-    image_size = 224
-    patch_size = 32
-    train_transform_keys = ["clip"]
-    val_transform_keys = ["clip"]
-    input_image_embed_size = 768
-
-
-@ex.named_config
-def clip16():
-    vit = 'ViT-B/16'
-    image_size = 224
-    patch_size = 16
-    train_transform_keys = ["clip"]
-    val_transform_keys = ["clip"]
-    input_image_embed_size = 768
-
-
-# text encoder
-@ex.named_config
-def text_roberta():
-    tokenizer = "roberta-base"
-    vocab_size = 50265
-    input_text_embed_size = 768
-
-
-@ex.named_config
-def text_roberta_large():
-    tokenizer = "roberta-large"
-    vocab_size = 50265
-    input_text_embed_size = 1024
-
-
-# random augmentation
-@ex.named_config
-def imagenet_randaug():
-    train_transform_keys = ["imagenet_randaug"]
-
-
-@ex.named_config
-def clip_randaug():
-    train_transform_keys = ["clip_randaug"]
-
-
-@ex.named_config
-def clip_resizedcrop():
-    train_transform_keys = ["clip_resizedcrop"]
+    pretrain_path = "/apdcephfs_cq10/share_1290796/lh/M3AE-master/M3AE-master/result/task_pretrain_m3ae-seed0-from_/version_1859/checkpoints/epoch=8-step=35811.ckpt"
