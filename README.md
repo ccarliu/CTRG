@@ -26,10 +26,12 @@ Implemention of paper 《Structure Observation Driven Image-Text Contrastive Lea
 1. Pretrain: Update the model and data paths in /CTRG/config.py, run
    ```bash
    ./run_scripts/pretrain_3D.sh
+   
 3. To reduce memory consumption during finetuning, extract visual features after pretraining:
    Set the pretrained model path in pretrained_visual_feature_extract.py, run
   ```bash
   ./run_scripts/visual_feature_extract.sh
+
 5. Finetuning: Update /CTRG/config.py with the correct model and data paths (including the pretraining checkpoint from step 1).
   ```bash
   ./run_scripts/finetune_rg.sh
