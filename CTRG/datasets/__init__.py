@@ -1,8 +1,1 @@
-from .cls_melinda_dataset import CLSMELINDADataset
-from .irtr_roco_dataset import IRTRROCODataset
-from .pretraining_medicat_dataset import MedicatDataset
-from .pretraining_roco_dataset import ROCODataset
-from .vqa_medvqa_2019_dataset import VQAMEDVQA2019Dataset
-from .vqa_slack_dataset import VQASLACKDataset
-from .vqa_vqa_rad_dataset import VQAVQARADDataset
-from .pretraining_ctrg_dataset import CTRGDataset, CTRGDataset_RATE, CTRGDataset_RATE_hr, CTRGDataset_RATE_hr_sim, CTRGDataset_RATE_hr_sim_fea, CTRGDataset_RATE_hr_sim_fea_dpo, CTRGDataset_RATE_hr_sim_fea_all, CTRGDataset_RATE_hr_sim_fea_clip
+from .pretraining_ctrg_dataset import CTRGDataset_RATE_hr_sim, CTRGDataset_RATE_hr_sim_fea

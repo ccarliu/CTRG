@@ -51,15 +51,6 @@ class BaseDataModule(LightningDataModule):
             else _config["val_transform_keys"]
         )
 
-        # Tokenizer
-        #tokenizer = _config["tokenizer"]
-        #self.tokenizer = get_pretrained_tokenizer(tokenizer)
-        textmodelpath = "/apdcephfs_cq10/share_1290796/lh/dataset/BiomedVLP_cxr_bert"
-        # self.tokenizer = AutoTokenizer.from_pretrained(textmodelpath)
-        # self.text_model = AutoModel.from_pretrained(textmodelpath, config=config_m)
-        self.tokenizer = BertTokenizer.from_pretrained(textmodelpath, do_lower_case=True)
-        self.vocab_size = self.tokenizer.vocab_size
-
         # Collator for Dataloaders
         collator = (
             DataCollatorForWholeWordMask
@@ -67,7 +58,6 @@ class BaseDataModule(LightningDataModule):
             else DataCollatorForLanguageModeling
         )
 
-        self.mlm_collator = collator(tokenizer=self.tokenizer, mlm=True, mlm_probability=_config["mlm_prob"])
         self.setup_flag = False
 
     @property
