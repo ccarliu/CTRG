@@ -21,7 +21,7 @@ Implemention of paper 《Structure Observation Driven Image-Text Contrastive Lea
    cd ctvit
    pip install -e .
 
-# training
+# Training
 
 1. Pretrain: Update the model and data paths in /CTRG/config.py, run
    ```bash
