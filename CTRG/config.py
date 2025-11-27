@@ -160,7 +160,7 @@ def task_pretrain_m3ae_3D():
     loss_names = _loss_names({"itm": 0, "mlm": 1, "mim": 0})
     batch_size = 4
     max_epoch = 10
-    max_steps = 200000
+    max_steps = 100000
     warmup_steps = 0.1
     whole_word_masking = True
 
@@ -170,7 +170,7 @@ def task_pretrain_m3ae_3D():
     tokenizer = "bert-base-uncased"
     train_transform_keys = ["clip"]
     val_transform_keys = ["clip"]
-    learning_rate = 1e-5
+    learning_rate = 1e-4
     val_check_interval = 1.0
     lr_multiplier_head = 5
     lr_multiplier_multi_modal = 5
