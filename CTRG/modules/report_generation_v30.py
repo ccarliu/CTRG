@@ -346,7 +346,7 @@ class M3AETransformerSS_3D_lmae_rg_v30(pl.LightningModule):
                 caption = self.tokenizer.decode(output, skip_special_tokens=True)
                 captions.append(caption[:])
         else:
-            captions = ["I am fxxking man."] # for test 
+            captions = ["Take place for test."] # for test 
         text_ori = []
 
         for l in range(text_ids.shape[0]): 
