@@ -6,8 +6,9 @@ Implemention of paper 《Structure Observation Driven Image-Text Contrastive Lea
 
 1. Download the dataset from [CT-RATE](https://huggingface.co/datasets/ibrahimhamamci/CT-RATE). And then preprocess data use scripts in ./data_preprocess (update the datepath in corresponding script first).
 2. Download the CT-CLIP model from [https://github.com/ibrahimethemhamamci/CT-CLIP](https://github.com/ibrahimethemhamamci/CT-CLIP).
-3. Download the pretrained text encoder: [**CXR-BERT-general**](https://huggingface.co/microsoft/BiomedVLP-CXR-BERT-general).
-4. Download the LLM text decoder: [**LLaMA-2-7B**](https://huggingface.co/meta-llama/Llama-2-7b).
+3. Download the pretrained text encoder: [CXR-BERT-general](https://huggingface.co/microsoft/BiomedVLP-CXR-BERT-general).
+4. Download the LLM text decoder: [LLaMA-2-7B](https://huggingface.co/meta-llama/Llama-2-7b).
+5. Download the pre-extracted text embedding from [Here](https://drive.google.com/file/d/1OI3H2HLyn-t6UWx7jhCjKnH97blLZSxx/view?usp=sharing)
 
 # Environment Setup
 
