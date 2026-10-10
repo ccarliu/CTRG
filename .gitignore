@@ -1,0 +1,6 @@
+# released data bundle (distributed separately as an archive)
+/data/
+*.tar.gz
+
+__pycache__/
+*.pyc

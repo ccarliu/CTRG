@@ -1,0 +1,44 @@
+# Main training environment (Stages 0-4).
+# Python 3.8, CUDA 11.7. Install PyTorch first:
+#   pip install torch==2.0.0 torchvision==0.15.1 --index-url https://download.pytorch.org/whl/cu117
+# Versions below are the ones used by the authors (Llama-3.2 needs transformers >= 4.43).
+torch==2.0.0
+torchvision==0.15.1
+pytorch-lightning==2.0.0
+torchmetrics==0.7.2
+transformers==4.44.0
+tokenizers==0.19.1
+accelerate==0.31.0
+peft==0.13.2
+sentencepiece==0.2.0
+sacred==0.8.2
+
+# Model building blocks
+einops==0.6.0
+positional-encodings==6.0.3
+vector-quantize-pytorch==1.1.2
+monai==1.3.0
+timm==0.4.12
+
+# Report-generation metrics / GRPO servers
+evaluate==0.4.1
+bottle==0.13.4
+tornado==6.4.2
+datasets==3.1.0
+nltk==3.8.1
+
+# Data / IO
+numpy==1.21.4
+scipy==1.10.1
+scikit-learn==1.0.2
+pandas==2.0.3
+nibabel==5.2.1
+SimpleITK==2.3.1
+pyarrow==17.0.0
+Pillow
+tqdm
+requests
+
+# The optional GREEN reward server needs a SEPARATE environment
+# (Python 3.12, torch 2.2.2, transformers 4.40.0) and the vendored package:
+#   pip install -e third_party/GREEN
