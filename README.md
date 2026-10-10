@@ -121,7 +121,7 @@ pip install pandas bottle tornado requests
 
 | What | Where | Set |
 |---|---|---|
-| Data bundle `ctrg_data.tar.gz` (reports, labels, region reports, metadata, report trees, fast masks, text embeddings) | released with this repo | extract in the repo root (`tar -xzf ctrg_data.tar.gz` → `./data`) or `CTRG_DATA_ROOT` |
+| Data bundle `ctrg_data.tar.gz` (reports, labels, region reports, metadata, report trees, fast masks, text embeddings) | [released with this repo](https://drive.google.com/file/d/112wCts4_APDUwS3jyzp4Ffps6s8sslCX/view?usp=sharing) | extract in the repo root (`tar -xzf ctrg_data.tar.gz` → `./data`) or `CTRG_DATA_ROOT` |
 | BiomedVLP-CXR-BERT | HF `microsoft/BiomedVLP-CXR-BERT-specialized` | `BIOMEDVLP_BERT` |
 | CT-CLIP `CT_CLIP_zeroshot.pt` (Stage 2, text branch only) | CT-CLIP release | `CT_CLIP_CKPT` |
 | Llama-3.2-3B (Stages 3-4, gated) | HF `meta-llama/Llama-3.2-3B` | `LLM_DECODER_PATH` |
