@@ -1,0 +1,201 @@
+diff --git a/green_score/__init__.py b/green_score/__init__.py
+index 4b54b77..e20dc0d 100644
+--- a/green_score/__init__.py
++++ b/green_score/__init__.py
+@@ -1 +1 @@
+-from .green import GREEN
+\ No newline at end of file
++from .green import GREEN, GreenSingle
+\ No newline at end of file
+diff --git a/green_score/green.py b/green_score/green.py
+index bb49156..007e88c 100644
+--- a/green_score/green.py
++++ b/green_score/green.py
+@@ -55,7 +55,7 @@ class GREEN:
+         )
+         self.cpu = cpu
+         self.output_dir = output_dir
+-        self.batch_size = 8
++        self.batch_size = 2
+         self.max_length = 2048
+         self.categories = [
+             "Clinically Significant Errors",
+@@ -133,7 +133,9 @@ class GREEN:
+ 
+         t = time.time()
+ 
+-        mean, std, green_scores, summary, results_df = self.infer()
++        # mean, std, green_scores, summary, results_df = self.infer()
++        green_scores = self.infer()
++        return green_scores
+ 
+         t = time.time() - t
+         if is_main_process():
+@@ -232,7 +234,12 @@ class GREEN:
+             attention_mask=batch["attention_mask"],
+             eos_token_id=self.tokenizer.eos_token_id,
+             pad_token_id=self.tokenizer.pad_token_id,
+-            max_length=2048,
++            # 原代码用 max_length=2048 限制"输入+输出"总长度：当输入 tokenize 后已接近
++            # 2048（GT+预测报告较长时），新版 transformers(>=4.40) 的
++            # _validate_generated_length 会直接报错（旧版本只是警告）。
++            # 改为 max_new_tokens 只限制新生成部分的长度，输入侧的截断已由
++            # tokenize_batch_as_chat 里的 max_length=self.max_length 负责。
++            max_new_tokens=512,
+             do_sample=False,
+             temperature=None,
+             top_p=None,
+@@ -255,6 +262,9 @@ class GREEN:
+         self.green_scores = [
+             self.compute_green(response) for response in self.completions
+         ]
++
++        return self.green_scores
++
+         self.error_counts = pd.DataFrame(
+             [self.compute_error_count(response) for response in self.completions],
+             columns=self.sub_categories + ["Matched Findings"],
+@@ -428,6 +438,102 @@ class GREEN:
+         summary += "----------------------------------\n"
+ 
+         return mean, std, summary
++class GreenSingle(GREEN):
++    """
++    无分布式版 GREEN
++    用法：
++        scorer = GreenSingle(model_name="...", gpu_id=0)   # 只用第 0 张卡
++        scores = scorer(refs, hyps)
++    """
++    def __init__(self, model_name=None, output_dir=".", cpu=False,
++                 compute_summary_stats=True, gpu_id=0):
++        # 先屏蔽掉父类里所有 dist 初始化
++        self._skip_dist = True
++        super().__init__(model_name=None, output_dir=output_dir, cpu=cpu,
++                         compute_summary_stats=compute_summary_stats)
++
++        # 下面重新加载模型（单卡）
++        if model_name and not cpu:
++            self.gpu_id = gpu_id
++            torch.cuda.set_device(gpu_id)
++            device = torch.device(f"cuda:{gpu_id}")
++
++            # 普通单卡加载：去掉 device_map
++            self.model = self._load_model_single(model_name, device)
++            self.tokenizer = self._load_tokenizer_single(model_name)
++
++            self.model_name = model_name.split("/")[-1]
++            self.model.eval()
++
++    # ---------- 工具：单卡加载 ----------
++    def _load_model_single(self, model_name, device):
++        from transformers import AutoModelForCausalLM
++        model = AutoModelForCausalLM.from_pretrained(
++            model_name,
++            trust_remote_code=False if "Phi" in model_name else True,
++            torch_dtype=torch.float16,
++        )
++        return model.to(device)
++
++    def _load_tokenizer_single(self, model_name):
++        from transformers import AutoTokenizer
++        tok = AutoTokenizer.from_pretrained(
++            model_name,
++            add_eos_token=True,
++            use_fast=True,
++            trust_remote_code=True,
++            padding_side="left",
++        )
++        chat_template = (
++            "{% for message in messages %}\n{% if message['from'] == 'human' %}"
++            "{{ '<|user|>\\n' + message['value'] + eos_token }}"
++            "{% elif message['from'] == 'gpt' %}"
++            "{{ '<|assistant|>\\n'  + message['value'] + eos_token }}"
++            "{% endif %}\n{% if loop.last and add_generation_prompt %}"
++            "{{ '<|assistant|>' }}"
++            "{% endif %}\n{% endfor %}"
++        )
++        tok.chat_template = chat_template
++        tok.pad_token = tok.eos_token
++        tok.clean_up_tokenization_spaces = True
++        return tok
++
++    # ---------- 覆盖父类 dist 相关方法 ----------
++    def __call__(self, refs, hyps):
++        # 彻底去掉 dist 分支
++        dataset = self.process_data(
++            Dataset.from_dict({"reference": refs, "prediction": hyps})
++        )
++        self.dataset = dataset
++        return self.infer()
++
++    @torch.inference_mode()
++    def infer(self):
++        assert self.model is not None and self.tokenizer is not None
++        # 不再 split_dataset_by_node，直接全量推理
++        self.completions, self.prompts = [], []
++        for batch in self.dataset.iter(batch_size=self.batch_size):
++            self.prompts.extend(batch["prompt"])
++            self.completions.extend(self.get_response(batch))
++        return self.process_results()
++
++    # 让 tokenize 落到当前卡
++    def tokenize_batch_as_chat(self, batch):
++        device = torch.device(f"cuda:{self.gpu_id}" if not self.cpu else "cpu")
++        batch = [
++            self.tokenizer.apply_chat_template(
++                i, tokenize=False, add_generation_prompt=True
++            )
++            for i in batch
++        ]
++        return self.tokenizer.batch_encode_plus(
++            batch,
++            return_tensors="pt",
++            padding=True,
++            truncation=True,
++            max_length=self.max_length,
++        ).to(device)
++
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/requirements.txt b/requirements.txt
+index beb3a13..91cfaff 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -6,16 +6,16 @@ matplotlib
+ sentencepiece==0.2.0
+ protobuf
+ sentence-transformers==3.0.1
+-datasets==3.2.0 
++datasets==3.1.0 
+ torchvision==0.17.2
+ opencv-python==4.10.0.84
+ dill==0.3.9
+ protobuf==5.29.1 
+ scipy
+ scikit-learn
+-pandas
++# pandas
+ # only for training
+-deepspeed 
+-peft
+-flash_attn
+-wandb
+\ No newline at end of file
++# deepspeed 
++# peft
++# flash_attn
++# wandb
+diff --git a/setup.py b/setup.py
+index 3a9d885..aa0955e 100644
+--- a/setup.py
++++ b/setup.py
+@@ -31,7 +31,7 @@ setup(
+         "numpy<2",
+         "pytest",
+     ],
+-    # python_requires='>=3.9,<=3.10.13',
++    #python_requires='>=3.9,<=3.10.13',
+     python_requires="==3.12.1",
+     packages=find_packages(),
+     zip_safe=False,
