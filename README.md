@@ -1,6 +1,6 @@
 # CTRG
-Implemention of paper 《Structure Observation Driven Image-Text Contrastive Learning for Computed Tomography Report Generation》
-For the implemention of paper 《Mimicking Radiologists: A Coarse-to-Fine Framework with Structural Sparse Tokens for Dual-LLM Computed Tomography Report Generation》， switch to another brunch.
+Implemention of paper 《Structure Observation Driven Image-Text Contrastive Learning for Computed Tomography Report Generation》.
+For the implemention of paper 《Mimicking Radiologists: A Coarse-to-Fine Framework with Structural Sparse Tokens for Dual-LLM Computed Tomography Report Generation》， switch to another branch.
 
 
 # Data Preparation
